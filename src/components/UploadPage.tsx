@@ -30,11 +30,11 @@ export function UploadPage({ onComplete }: UploadPageProps) {
       //const formData = new FormData();
       //formData.append('file', file);
 
-      const binaryData = await file.arrayBuffer();
+      //const binaryData = await file.arrayBuffer();
 
-      const folder = 'sustainability-app-storage-1122';
+      //const folder = 'sustainability-app-storage-1122';
       //const object = encodeURIComponent(file.name); 
-      const object = file.name;
+      //const object = file.name;
       //fetch('https://cors-anywhere.herokuapp.com/https://u65botpq5e.execute-api.us-east-1.amazonaws.com/dev/sustainability-app-storage-1122/10k.pdf')
 
       const url = `https://u65botpq5e.execute-api.us-east-1.amazonaws.com/dev/sustainability-app-storage-1122/10k.pdf`;
