@@ -1,95 +1,75 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import '@aws-amplify/ui-react/styles.css';
+import { awsConfig } from '../config';
 
 interface UploadPageProps {
   onComplete: () => void;
 }
 
-export function UploadPage({ onComplete }: UploadPageProps) {
-  const [file, setFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+// Using API Gateway as a proxy to S3 bucket
 
-  // triggered when the user selects a file in the file input field
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-    if (selectedFile) {
-      // sets file
-      setFile(selectedFile);
-      setError(null);
+export function UploadPage({ onComplete }: UploadPageProps) {
+  const [isUploading, setIsUploading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files.length > 0) {
+      setSelectedFile(event.target.files[0]);
     }
   };
 
-  const handleUpload = async () => {
-    // checks if file has been selected before starting the upload
-    if (!file) return;
-
-    setUploading(true);
-    setError(null);
-
+  const handleUploadClick = async () => {
+    if (!selectedFile) return;
+    
+    setIsUploading(true);
     try {
-      //const formData = new FormData();
-      //formData.append('file', file);
-
-      //const binaryData = await file.arrayBuffer();
-
-      //const folder = 'sustainability-app-storage-1122';
-      //const object = encodeURIComponent(file.name); 
-      //const object = file.name;
-      //fetch('https://cors-anywhere.herokuapp.com/https://u65botpq5e.execute-api.us-east-1.amazonaws.com/dev/sustainability-app-storage-1122/10k.pdf')
-
-      const url = `https://u65botpq5e.execute-api.us-east-1.amazonaws.com/dev/sustainability-app-storage-1122/10k.pdf`;
-
-      const response = await fetch( url,
-        {
-          method: 'PUT',
-          body: file,
+      // Create form data for the file upload
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+      
+      // Use the API Gateway endpoint to upload the file
+      //const uploadUrl = `${awsConfig.api.endpoint}/${awsConfig.api.stage}/${awsConfig.storage.bucket}/${selectedFile.name}`;
+      const uploadUrl = `https://u65botpq5e.execute-api.us-east-1.amazonaws.com/dev/upload`
+      const response = await fetch(uploadUrl, {
+        method: 'POST',
+        body: selectedFile,
+        headers: {
+          'Content-Type': selectedFile.type
         }
-      );
-
+      });
+      
       if (!response.ok) {
-        const message = await response.text();
-        const errorCode = response.status;
-        throw new Error(`Error ${errorCode}: ${message}`);
+        throw new Error(`Upload failed with status: ${response.status}`);
       }
-
+      
+      setSelectedFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      setIsUploading(false);
       onComplete();
-    } catch (err: any) {
-      setError(err.message);
-      console.error('Error uploading file:', err);
-    } finally {
-      setUploading(false);
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      setIsUploading(false);
     }
   };
 
   return (
     <div className="upload-container">
-      <h1>Welcome to Sustainability Recommendation Engine</h1>
-      <p>Please upload your sustainability data to get started</p>
-
-      <div className="upload-form">
-        <input
-          type="file"
-          onChange={handleFileChange}
-          disabled={uploading}
+      <h2>Upload Files</h2>
+      <p>Please upload your data files here</p>
+      
+      <div className="manual-upload">
+        <input 
+          type="file" 
+          onChange={handleFileChange} 
+          ref={fileInputRef}
         />
-
-        {file && (
-          <div className="file-info">
-            <p>Selected file: {file.name}</p>
-            <button
-              onClick={handleUpload}
-              disabled={uploading}
-            >
-              {uploading ? 'Uploading...' : 'Upload File'}
-            </button>
-          </div>
-        )}
-
-        {error && (
-          <div className="error-message" style={{ color: 'red' }}>
-            {error}
-          </div>
-        )}
+        <button 
+          onClick={handleUploadClick} 
+          disabled={!selectedFile || isUploading}
+        >
+          {isUploading ? 'Uploading...' : 'Upload'}
+        </button>
       </div>
     </div>
   );

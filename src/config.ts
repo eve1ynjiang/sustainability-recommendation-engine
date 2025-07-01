@@ -10,6 +10,7 @@ export const awsConfig = {
   api: {
     name: 'sustainable-engine-api', // Name used to reference this API in Amplify
     endpoint: 'https://u65botpq5e.execute-api.us-east-1.amazonaws.com',
+    stage: 'dev', // API Gateway stage
     region: 'us-east-1', // Replace with your API's region
     paths: {
       processFile: '/process-file' // Path to your API endpoint that processes uploaded files
