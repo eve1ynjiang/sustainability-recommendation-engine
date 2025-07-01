@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import '@aws-amplify/ui-react/styles.css';
-import { awsConfig } from '../config';
+//import { awsConfig } from '../config';
 
 interface UploadPageProps {
   onComplete: () => void;
